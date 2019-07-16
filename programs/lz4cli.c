@@ -148,11 +148,11 @@ int LZ4IO_compressFilename_Legacy(const char* input_filename, const char* output
 static int usage(void)
 {
     DISPLAY( "Usage :\n");
-    DISPLAY( "      %s [arg] [input] [output]\n", programName);
+    DISPLAY( "      %s [<options>] [<input>] [<output>]\n", programName);
     DISPLAY( "\n");
-    DISPLAY( "input   : a filename\n");
-    DISPLAY( "          with no FILE, or when FILE is - or %s, read standard input\n", stdinmark);
-    DISPLAY( "Arguments :\n");
+    DISPLAY( "input   : a file name\n");
+    DISPLAY( "          when not specified, or when file name is - or %s, read standard input\n", stdinmark);
+    DISPLAY( "Options :\n");
     DISPLAY( " -1     : Fast compression (default) \n");
     DISPLAY( " -9     : High compression \n");
     DISPLAY( " -d     : decompression (default for %s extension)\n", LZ4_EXTENSION);
@@ -175,15 +175,15 @@ static int usage_advanced(void)
     DISPLAY( " -t     : test compressed file integrity\n");
     DISPLAY( " -m     : multiple input files (implies automatic output filenames)\n");
     DISPLAY( " -l     : compress using Legacy format (Linux kernel compression)\n");
-    DISPLAY( " -B#    : Block size [4-7](default : 7)\n");
-    DISPLAY( " -BD    : Block dependency (improve compression ratio)\n");
-    /* DISPLAY( " -BX    : enable block checksum (default:disabled)\n");   *//* Option currently inactive */
+    DISPLAY( " -B #   : Block size [4-7](default : 7)\n");
+    DISPLAY( " -B D   : Block dependency (improve compression ratio)\n");
+    /* DISPLAY( " -B X   : enable block checksum (default:disabled)\n");   *//* Option currently inactive */
     DISPLAY( "--no-frame-crc : disable stream checksum (default:enabled)\n");
     DISPLAY( "--content-size : compressed frame includes original size (default:not present)\n");
     DISPLAY( "--[no-]sparse  : sparse mode (default:enabled on file, disabled on stdout)\n");
     DISPLAY( "Benchmark arguments :\n");
     DISPLAY( " -b     : benchmark file(s)\n");
-    DISPLAY( " -i#    : iteration loops [1-9](default : 3), benchmark mode only\n");
+    DISPLAY( " -i #   : iteration loops [1-9](default : 3), benchmark mode only\n");
 #if defined(ENABLE_LZ4C_LEGACY_OPTIONS)
     DISPLAY( "Legacy arguments :\n");
     DISPLAY( " -c0    : fast compression\n");
@@ -199,16 +199,16 @@ static int usage_longhelp(void)
 {
     usage_advanced();
     DISPLAY( "\n");
-    DISPLAY( "Which values can get [output] ? \n");
-    DISPLAY( "[output] : a filename\n");
+    DISPLAY( "Which values can get <output> ? \n");
+    DISPLAY( "<output> : a filename\n");
     DISPLAY( "          '%s', or '-' for standard output (pipe mode)\n", stdoutmark);
     DISPLAY( "          '%s' to discard output (test mode)\n", NULL_OUTPUT);
-    DISPLAY( "[output] can be left empty. In this case, it receives the following value : \n");
-    DISPLAY( "          - if stdout is not the console, then [output] = stdout \n");
+    DISPLAY( "<output> can be left empty. In this case, it receives the following value : \n");
+    DISPLAY( "          - if stdout is not the console, then <output> = stdout \n");
     DISPLAY( "          - if stdout is console : \n");
     DISPLAY( "               + if compression selected, output to filename%s \n", LZ4_EXTENSION);
-    DISPLAY( "               + if decompression selected, output to filename without '%s'\n", LZ4_EXTENSION);
     DISPLAY( "                    > if input filename has no '%s' extension : error\n", LZ4_EXTENSION);
+    DISPLAY( "               + if decompression selected, output to stdout\n");
     DISPLAY( "\n");
     DISPLAY( "Compression levels : \n");
     DISPLAY( "There are technically 2 accessible compression levels.\n");
@@ -217,8 +217,9 @@ static int usage_longhelp(void)
     DISPLAY( "\n");
     DISPLAY( "stdin, stdout and the console : \n");
     DISPLAY( "To protect the console from binary flooding (bad argument mistake)\n");
-    DISPLAY( "%s will refuse to read from console, or write to console \n", programName);
-    DISPLAY( "except if '-c' command is specified, to force output to console \n");
+    DISPLAY( "%s will refuse to read compressed data from console, or write\n", programName);
+    DISPLAY( "compressed data to console except if '-c' command is specified, to force\n");
+    DISPLAY( "output to console \n");
     DISPLAY( "\n");
     DISPLAY( "Simple example :\n");
     DISPLAY( "1 : compress 'filename' fast, using default output name 'filename.lz4'\n");
