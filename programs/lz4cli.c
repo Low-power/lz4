@@ -391,28 +391,35 @@ int main(int argc, char** argv)
 
                     /* Modify Block Properties */
                 case 'B':
-                    while (argument[1]!=0)
+			if(argument[1]) {
+				argument++;
+			} else if(++i < argc) {
+				argument = argv[i];
+			} else {
+				badusage();
+			}
+                    while (argument[0]!=0)
                     {
-                        int exitBlockProperties=0;
-                        switch(argument[1])
+                        switch(argument[0])
                         {
                         case '4':
                         case '5':
                         case '6':
                         case '7':
                         {
-                            int B = argument[1] - '0';
+                            int B = argument[0] - '0';
                             blockSize = LZ4IO_setBlockSizeID(B);
                             BMK_setBlocksize(blockSize);
                             argument++;
                             break;
                         }
                         case 'D': LZ4IO_setBlockMode(LZ4IO_blockLinked); argument++; break;
-                        case 'X': LZ4IO_setBlockChecksumMode(1); argument ++; break;   /* currently disabled */
-                        default : exitBlockProperties=1;
+                        case 'X': LZ4IO_setBlockChecksumMode(1); argument++; break;   /* currently disabled */
+                        default :
+				badusage();
                         }
-                        if (exitBlockProperties) break;
                     }
+			argument = "-";
                     break;
 
                     /* Benchmark */
@@ -480,7 +487,7 @@ int main(int argc, char** argv)
     if(!input_filename) { input_filename=stdinmark; }
 
     /* Check if input is defined as console; trigger an error in this case */
-    if (!strcmp(input_filename, stdinmark) && IS_CONSOLE(stdin) ) badusage();
+    if (!strcmp(input_filename, stdinmark) && decode && IS_CONSOLE(stdin)) badusage();
 
     /* Check if benchmark is selected */
     if (bench)
@@ -493,7 +500,7 @@ int main(int argc, char** argv)
     /* No output filename ==> try to select one automatically (when possible) */
     while (!output_filename)
     {
-        if (!IS_CONSOLE(stdout)) { output_filename=stdoutmark; break; }   /* Default to stdout whenever possible (i.e. not a console) */
+        if (decode || !IS_CONSOLE(stdout)) { output_filename=stdoutmark; break; }   /* Default to stdout whenever possible (i.e. not a console) */
         if ((!decode) && !(forceCompress))   /* auto-determine compression or decompression, based on file extension */
         {
             size_t l = strlen(input_filename);
@@ -526,7 +533,7 @@ int main(int argc, char** argv)
     }
 
     /* Check if output is defined as console; trigger an error in this case */
-    if (!strcmp(output_filename,stdoutmark) && IS_CONSOLE(stdout) && !forceStdout) badusage();
+    if (!strcmp(output_filename,stdoutmark) && !decode && IS_CONSOLE(stdout) && !forceStdout) badusage();
 
     /* Downgrade notification level in pure pipe mode (stdin + stdout) and multiple file mode */
     if (!strcmp(input_filename, stdinmark) && !strcmp(output_filename,stdoutmark) && (displayLevel==2)) displayLevel=1;
