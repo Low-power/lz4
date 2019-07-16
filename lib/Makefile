@@ -32,10 +32,10 @@
 
 # Version numbers
 VERSION ?= 129
-LIBVER_MAJOR=`sed -n '/define LZ4_VERSION_MAJOR/s/.*[[:blank:]]\([0-9][0-9]*\).*/\1/p' < lz4.h`
-LIBVER_MINOR=`sed -n '/define LZ4_VERSION_MINOR/s/.*[[:blank:]]\([0-9][0-9]*\).*/\1/p' < lz4.h`
-LIBVER_PATCH=`sed -n '/define LZ4_VERSION_RELEASE/s/.*[[:blank:]]\([0-9][0-9]*\).*/\1/p' < lz4.h`
-LIBVER=$(LIBVER_MAJOR).$(LIBVER_MINOR).$(LIBVER_PATCH)
+LIBVER_MAJOR := $(shell sed -n '/define LZ4_VERSION_MAJOR/s/.*[[:blank:]]\([0-9][0-9]*\).*/\1/p' lz4.h)
+LIBVER_MINOR := $(shell sed -n '/define LZ4_VERSION_MINOR/s/.*[[:blank:]]\([0-9][0-9]*\).*/\1/p' lz4.h)
+LIBVER_PATCH := $(shell sed -n '/define LZ4_VERSION_RELEASE/s/.*[[:blank:]]\([0-9][0-9]*\).*/\1/p' lz4.h)
+LIBVER:=$(LIBVER_MAJOR).$(LIBVER_MINOR).$(LIBVER_PATCH)
 
 DESTDIR?=
 PREFIX ?= /usr/local
@@ -49,30 +49,34 @@ INCLUDEDIR=$(PREFIX)/include
 # OS X linker doesn't support -soname, and use different extension
 # see : https://developer.apple.com/library/mac/documentation/DeveloperTools/Conceptual/DynamicLibraries/100-Articles/DynamicLibraryDesignGuidelines.html
 ifeq ($(shell uname), Darwin)
-	SHARED_EXT = dylib
-	SHARED_EXT_MAJOR = $(LIBVER_MAJOR).$(SHARED_EXT)
-	SHARED_EXT_VER = $(LIBVER).$(SHARED_EXT)
-	SONAME_FLAGS = -install_name $(PREFIX)/lib/liblz4.$(SHARED_EXT_MAJOR) -compatibility_version $(LIBVER_MAJOR) -current_version $(LIBVER)
+	SHARED_EXT := dylib
+	SHARED_EXT_MAJOR := $(LIBVER_MAJOR).$(SHARED_EXT)
+	SHARED_EXT_VER := $(LIBVER).$(SHARED_EXT)
+	SONAME_FLAGS := -install_name liblz4.$(SHARED_EXT_MAJOR) -compatibility_version $(LIBVER_MAJOR) -current_version $(LIBVER)
 else
-	SONAME_FLAGS = -Wl,-soname=liblz4.$(SHARED_EXT).$(LIBVER_MAJOR)
-	SHARED_EXT = so
-	SHARED_EXT_MAJOR = $(SHARED_EXT).$(LIBVER_MAJOR)
-	SHARED_EXT_VER = $(SHARED_EXT).$(LIBVER)
+	SHARED_EXT := so
+	SHARED_EXT_MAJOR := $(SHARED_EXT).$(LIBVER_MAJOR)
+	SHARED_EXT_VER := $(SHARED_EXT).$(LIBVER)
+	SONAME_FLAGS := -Wl,--soname,liblz4.$(SHARED_EXT).$(LIBVER_MAJOR)
 endif
 
 default: liblz4
 
 all: liblz4
 
-liblz4: lz4.c lz4hc.c lz4frame.c xxhash.c
+liblz4: liblz4.a liblz4.$(SHARED_EXT)
+
+liblz4.a:	lz4.c lz4hc.c lz4frame.c xxhash.c
 	@echo compiling static library
-	@$(CC) $(CPPFLAGS) $(CFLAGS) -c $^
-	@$(AR) rcs liblz4.a lz4.o lz4hc.o lz4frame.o xxhash.o
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $^
+	$(AR) -rcs $@ lz4.o lz4hc.o lz4frame.o xxhash.o
+
+liblz4.$(SHARED_EXT):	lz4.c lz4hc.c lz4frame.c xxhash.c
 	@echo compiling dynamic library $(LIBVER)
-	@$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) -shared $^ -fPIC $(SONAME_FLAGS) -o $@.$(SHARED_EXT_VER)
+	$(CC) $(CPPFLAGS) $(CFLAGS) -fPIC --shared $(LDFLAGS) $(SONAME_FLAGS) $^ -o liblz4.$(SHARED_EXT_VER)
 	@echo creating versioned links
-	@ln -sf $@.$(SHARED_EXT_VER) $@.$(SHARED_EXT_MAJOR)
-	@ln -sf $@.$(SHARED_EXT_VER) $@.$(SHARED_EXT)
+	ln -sf liblz4.$(SHARED_EXT_VER) liblz4.$(SHARED_EXT_MAJOR)
+	ln -sf liblz4.$(SHARED_EXT_VER) $@
 
 clean:
 	@rm -f core *.o *.a *.$(SHARED_EXT) *.$(SHARED_EXT).* liblz4.pc
