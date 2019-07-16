@@ -40,12 +40,19 @@ DESTDIR?=
 PREFIX ?= /usr/local
 CFLAGS ?= -O3
 CFLAGS += -std=c99 -Wall -Wextra -Wundef -Wshadow -Wcast-qual -Wcast-align -Wstrict-prototypes -pedantic -DLZ4_VERSION=\"$(RELEASE)\"
-FLAGS  := -I../lib $(CPPFLAGS) $(CFLAGS) $(LDFLAGS)
 
 BINDIR := $(PREFIX)/bin
 MANDIR := $(PREFIX)/share/man/man1
 LZ4DIR := ../lib
 
+CPPFLAGS += -I $(LZ4DIR)
+ifdef NO_STATIC
+LDFLAGS += -L $(LZ4DIR)
+#LIBS += -l lz4
+LZ4_LIBS := -l lz4
+else
+LZ4_SOURCES := $(LZ4DIR)/lz4.c $(LZ4DIR)/lz4hc.c $(LZ4DIR)/lz4frame.c
+endif
 
 # Define *.exe as extension for Windows systems
 ifneq (,$(filter Windows%,$(OS)))
@@ -72,35 +79,35 @@ bins: lz4 lz4c fullbench fuzzer frametest datagen
 
 all: bins m32
 
-lz4: $(LZ4DIR)/lz4.c $(LZ4DIR)/lz4hc.c $(LZ4DIR)/lz4frame.c $(LZ4DIR)/xxhash.c bench.c lz4io.c lz4cli.c
-	$(CC)      $(FLAGS) $^ -o $@$(EXT)
+lz4: $(LZ4_SOURCES) $(LZ4DIR)/xxhash.c bench.c lz4io.c lz4cli.c
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $^ -o $@$(EXT) $(LZ4_LIBS) $(LIBS)
 
-lz4c  : $(LZ4DIR)/lz4.c $(LZ4DIR)/lz4hc.c $(LZ4DIR)/lz4frame.c $(LZ4DIR)/xxhash.c bench.c lz4io.c lz4cli.c
-	$(CC)      $(FLAGS) -DENABLE_LZ4C_LEGACY_OPTIONS $^ -o $@$(EXT)
+lz4c  : $(LZ4_SOURCES) $(LZ4DIR)/xxhash.c bench.c lz4io.c lz4cli.c
+	$(CC)      $(CPPFLAGS) $(CFLAGS) -D ENABLE_LZ4C_LEGACY_OPTIONS=1 $(LDFLAGS) $^ -o $@$(EXT) $(LZ4_LIBS) $(LIBS)
 
 lz4c32: $(LZ4DIR)/lz4.c $(LZ4DIR)/lz4hc.c $(LZ4DIR)/lz4frame.c $(LZ4DIR)/xxhash.c bench.c lz4io.c lz4cli.c
-	$(CC) -m32 $(FLAGS) -DENABLE_LZ4C_LEGACY_OPTIONS $^ -o $@$(EXT)
+	$(CC) -m32 $(CPPFLAGS) $(CFLAGS) -D ENABLE_LZ4C_LEGACY_OPTIONS=1 $(LDFLAGS) $^ -o $@$(EXT) $(LIBS)
 
 fullbench  : $(LZ4DIR)/lz4.c $(LZ4DIR)/lz4hc.c $(LZ4DIR)/lz4frame.c $(LZ4DIR)/xxhash.c fullbench.c
-	$(CC)      $(FLAGS) $^ -o $@$(EXT)
+	$(CC)      $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $^ -o $@$(EXT) $(LIBS)
 
 fullbench32: $(LZ4DIR)/lz4.c $(LZ4DIR)/lz4hc.c $(LZ4DIR)/lz4frame.c $(LZ4DIR)/xxhash.c fullbench.c
-	$(CC) -m32 $(FLAGS) $^ -o $@$(EXT)
+	$(CC) -m32 $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $^ -o $@$(EXT) $(LIBS)
 
 fuzzer  : $(LZ4DIR)/lz4.c $(LZ4DIR)/lz4hc.c $(LZ4DIR)/xxhash.c fuzzer.c
-	$(CC)      $(FLAGS) $^ -o $@$(EXT)
+	$(CC)      $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $^ -o $@$(EXT) $(LIBS)
 
 fuzzer32: $(LZ4DIR)/lz4.c $(LZ4DIR)/lz4hc.c $(LZ4DIR)/xxhash.c fuzzer.c
-	$(CC) -m32 $(FLAGS) $^ -o $@$(EXT)
+	$(CC) -m32 $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $^ -o $@$(EXT) $(LIBS)
 
 frametest: $(LZ4DIR)/lz4frame.c $(LZ4DIR)/lz4.c $(LZ4DIR)/lz4hc.c $(LZ4DIR)/xxhash.c frametest.c
-	$(CC)      $(FLAGS) $^ -o $@$(EXT)
+	$(CC)      $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $^ -o $@$(EXT) $(LIBS)
 
 frametest32: $(LZ4DIR)/lz4frame.c $(LZ4DIR)/lz4.c $(LZ4DIR)/lz4hc.c $(LZ4DIR)/xxhash.c frametest.c
-	$(CC) -m32 $(FLAGS) $^ -o $@$(EXT)
+	$(CC) -m32 $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $^ -o $@$(EXT) $(LIBS)
 
 datagen : datagen.c datagencli.c
-	$(CC)      $(FLAGS) $^ -o $@$(EXT)
+	$(CC)      $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $^ -o $@$(EXT) $(LIBS)
 
 clean:
 	@rm -f core *.o *.test tmp* \
