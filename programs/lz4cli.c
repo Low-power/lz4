@@ -159,6 +159,8 @@ static int usage(void)
     DISPLAY( " -z     : force compression\n");
     DISPLAY( " -f     : overwrite output without prompting \n");
     DISPLAY( " -h/-H  : display help/long help and exit\n");
+    DISPLAY( " --fast : same as -1\n");
+    DISPLAY( " --best : same as -9\n");
     return 0;
 }
 
@@ -167,7 +169,7 @@ static int usage_advanced(void)
     DISPLAY(WELCOME_MESSAGE);
     usage();
     DISPLAY( "\n");
-    DISPLAY( "Advanced arguments :\n");
+    DISPLAY( "Advanced options :\n");
     DISPLAY( " -V     : display Version number and exit\n");
     DISPLAY( " -v     : verbose mode\n");
     DISPLAY( " -q     : suppress warnings; specify twice to suppress errors too\n");
@@ -181,11 +183,11 @@ static int usage_advanced(void)
     DISPLAY( "--no-frame-crc : disable stream checksum (default:enabled)\n");
     DISPLAY( "--content-size : compressed frame includes original size (default:not present)\n");
     DISPLAY( "--[no-]sparse  : sparse mode (default:enabled on file, disabled on stdout)\n");
-    DISPLAY( "Benchmark arguments :\n");
+    DISPLAY( "Benchmark options :\n");
     DISPLAY( " -b     : benchmark file(s)\n");
     DISPLAY( " -i #   : iteration loops [1-9](default : 3), benchmark mode only\n");
 #if defined(ENABLE_LZ4C_LEGACY_OPTIONS)
-    DISPLAY( "Legacy arguments :\n");
+    DISPLAY( "Legacy options :\n");
     DISPLAY( " -c0    : fast compression\n");
     DISPLAY( " -c1    : high compression\n");
     DISPLAY( " -hc    : high compression\n");
@@ -319,7 +321,9 @@ int main(int argc, char** argv)
         if (!strcmp(argument, "--quiet")) { if (displayLevel) displayLevel--; continue; }
         if (!strcmp(argument, "--version")) { DISPLAY(WELCOME_MESSAGE); return 0; }
         if (!strcmp(argument, "--keep")) { continue; }   /* keep source file (default anyway; just for xz/lzma compatibility) */
-
+	/* --fast and --best for gzip(1) compatibility */
+        if (!strcmp(argument, "--fast")) { cLevel=1; continue; }
+        if (!strcmp(argument, "--best")) { cLevel=9; continue; }
 
         /* Short commands (note : aggregated short commands are allowed) */
         if (argument[0]=='-')
