@@ -95,9 +95,9 @@
 #define LZ4CAT "lz4cat"
 #define UNLZ4 "unlz4"
 
-#define KB *(1U<<10)
-#define MB *(1U<<20)
-#define GB *(1U<<30)
+#define KiB *(1U<<10)
+#define MiB *(1U<<20)
+#define GiB *(1U<<30)
 
 #define LZ4_BLOCKSIZEID_DEFAULT 7
 
@@ -371,7 +371,7 @@ int main(int argc, char** argv)
                 case 'z': forceCompress = 1; break;
 
                     /* Use Legacy format (ex : Linux kernel compression) */
-                case 'l': legacy_format = 1; blockSize = 8 MB; break;
+                case 'l': legacy_format = 1; blockSize = 8 MiB; break;
 
                     /* Decoding */
                 case 'd': decode=1; break;
@@ -485,7 +485,7 @@ int main(int argc, char** argv)
     }
 
     DISPLAYLEVEL(3, WELCOME_MESSAGE);
-    if (!decode) DISPLAYLEVEL(4, "Blocks size : %i KB\n", blockSize>>10);
+    if (!decode) DISPLAYLEVEL(4, "Blocks size : %i KiB\n", blockSize>>10);
 
     /* No input filename ==> use stdin */
     if (multiple_inputs) input_filename = inFileNames[0], output_filename = (const char*)(inFileNames[0]);
