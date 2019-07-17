@@ -57,11 +57,11 @@
 #  define ZSTD_VERSION "r1"
 #endif
 
-#define KB *(1 <<10)
-#define MB *(1 <<20)
-#define GB *(1U<<30)
+#define KiB *(1 <<10)
+#define MiB *(1 <<20)
+#define GiB *(1U<<30)
 
-#define SIZE_DEFAULT (64 KB)
+#define SIZE_DEFAULT (64 KiB)
 #define SEED_DEFAULT 0
 #define COMPRESSIBILITY_DEFAULT 50
 

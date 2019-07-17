@@ -92,9 +92,9 @@ typedef unsigned long long  U64;
 #define PRIME2   2246822519U
 #define PRIME3   3266489917U
 
-#define KB *(1U<<10)
-#define MB *(1U<<20)
-#define GB *(1U<<30)
+#define KiB *(1U<<10)
+#define MiB *(1U<<20)
+#define GiB *(1U<<30)
 
 
 /*****************************************
@@ -201,7 +201,7 @@ static void FUZ_fillCompressibleNoiseBuffer(void* buffer, size_t bufferSize, dou
 
 
 #define MAX_NB_BUFF_I134 150
-#define BLOCKSIZE_I134   (32 MB)
+#define BLOCKSIZE_I134   (32 MiB)
 static int FUZ_AddressOverflow(void)
 {
     char* buffers[MAX_NB_BUFF_I134+1];
@@ -745,9 +745,9 @@ _output_error:
 }
 
 
-#define testInputSize (192 KB)
-#define testCompressedSize (128 KB)
-#define ringBufferSize (8 KB)
+#define testInputSize (192 KiB)
+#define testCompressedSize (128 KiB)
+#define ringBufferSize (8 KiB)
 
 static void FUZ_unitTests(void)
 {
@@ -860,13 +860,13 @@ static void FUZ_unitTests(void)
         FUZ_CHECKTEST(crcOrig!=crcNew, "LZ4_decompress_safe() decompression corruption");
 
         /* simple dictionary HC compression test */
-        crcOrig = XXH64(testInput + 64 KB, testCompressedSize, 0);
+        crcOrig = XXH64(testInput + 64 KiB, testCompressedSize, 0);
         LZ4_resetStreamHC(&sHC, 0);
-        LZ4_loadDictHC(&sHC, testInput, 64 KB);
-        result = LZ4_compressHC_limitedOutput_continue(&sHC, testInput + 64 KB, testCompressed, testCompressedSize, testCompressedSize-1);
+        LZ4_loadDictHC(&sHC, testInput, 64 KiB);
+        result = LZ4_compressHC_limitedOutput_continue(&sHC, testInput + 64 KiB, testCompressed, testCompressedSize, testCompressedSize-1);
         FUZ_CHECKTEST(result==0, "LZ4_compressHC_limitedOutput_continue() dictionary compression failed : result = %i", result);
 
-        result = LZ4_decompress_safe_usingDict(testCompressed, testVerify, result, testCompressedSize, testInput, 64 KB);
+        result = LZ4_decompress_safe_usingDict(testCompressed, testVerify, result, testCompressedSize, testInput, 64 KiB);
         FUZ_CHECKTEST(result!=(int)testCompressedSize, "LZ4_decompress_safe() simple dictionary decompression test failed");
         crcNew = XXH64(testVerify, testCompressedSize, 0);
         FUZ_CHECKTEST(crcOrig!=crcNew, "LZ4_decompress_safe() simple dictionary decompression test : corruption");
@@ -892,13 +892,13 @@ static void FUZ_unitTests(void)
         }
 
         /* remote dictionary HC compression test */
-        crcOrig = XXH64(testInput + 64 KB, testCompressedSize, 0);
+        crcOrig = XXH64(testInput + 64 KiB, testCompressedSize, 0);
         LZ4_resetStreamHC(&sHC, 0);
-        LZ4_loadDictHC(&sHC, testInput, 32 KB);
-        result = LZ4_compressHC_limitedOutput_continue(&sHC, testInput + 64 KB, testCompressed, testCompressedSize, testCompressedSize-1);
+        LZ4_loadDictHC(&sHC, testInput, 32 KiB);
+        result = LZ4_compressHC_limitedOutput_continue(&sHC, testInput + 64 KiB, testCompressed, testCompressedSize, testCompressedSize-1);
         FUZ_CHECKTEST(result==0, "LZ4_compressHC_limitedOutput_continue() remote dictionary failed : result = %i", result);
 
-        result = LZ4_decompress_safe_usingDict(testCompressed, testVerify, result, testCompressedSize, testInput, 32 KB);
+        result = LZ4_decompress_safe_usingDict(testCompressed, testVerify, result, testCompressedSize, testInput, 32 KiB);
         FUZ_CHECKTEST(result!=(int)testCompressedSize, "LZ4_decompress_safe_usingDict() decompression failed following remote dictionary HC compression test");
         crcNew = XXH64(testVerify, testCompressedSize, 0);
         FUZ_CHECKTEST(crcOrig!=crcNew, "LZ4_decompress_safe_usingDict() decompression corruption");
@@ -1007,7 +1007,7 @@ static void FUZ_unitTests(void)
             U32 totalMessageSize = 0;
             U32 iNext = 0;
             U32 dNext = 0;
-            const U32 dBufferSize = 64 KB;
+            const U32 dBufferSize = 64 KiB;
 
             XXH64_reset(&xxhOrig, 0);
             XXH64_reset(&xxhNew, 0);
@@ -1041,7 +1041,7 @@ static void FUZ_unitTests(void)
                 memcpy(testInput + iNext, testInput + 8, messageSize);
                 if (dNext > dBufferSize) dNext = 0;
 
-            while (totalMessageSize < 9 MB)
+            while (totalMessageSize < 9 MiB)
             {
                 XXH64_update(&xxhOrig, testInput + iNext, messageSize);
                 crcOrig = XXH64_digest(&xxhOrig);

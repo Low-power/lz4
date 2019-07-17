@@ -30,7 +30,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 #define _CRT_SECURE_NO_DEPRECATE     /* VS2005 */
 
-/* Unix Large Files support (>4GB) */
+/* Unix Large Files support (>4GiB) */
 #if (defined(__sun__) && (!defined(__LP64__)))   // Sun Solaris 32-bits requires specific definitions
 #  define _LARGEFILE_SOURCE
 #  define _FILE_OFFSET_BITS 64
@@ -108,13 +108,13 @@
 #define NBLOOPS    6
 #define TIMELOOP   2500
 
-#define KB *(1 <<10)
-#define MB *(1 <<20)
-#define GB *(1U<<30)
+#define KiB *(1 <<10)
+#define MiB *(1 <<20)
+#define GiB *(1U<<30)
 
 #define KNUTH      2654435761U
-#define MAX_MEM    (1920 MB)
-#define DEFAULT_CHUNKSIZE   (4 MB)
+#define MAX_MEM    (1920 MiB)
+#define DEFAULT_CHUNKSIZE   (4 MiB)
 
 #define ALL_COMPRESSORS 0
 #define ALL_DECOMPRESSORS 0
@@ -155,7 +155,7 @@ static int g_noPrompt = 0;
 static void BMK_setBlocksize(int bsize)
 {
     g_chunkSize = bsize;
-    DISPLAY("-Using Block Size of %i KB-\n", g_chunkSize>>10);
+    DISPLAY("-Using Block Size of %i KiB-\n", g_chunkSize>>10);
 }
 
 static void BMK_setNbIterations(int nbLoops)
@@ -215,7 +215,7 @@ static int BMK_GetMilliSpan( int nTimeStart )
 
 static size_t BMK_findMaxMem(U64 requiredMem)
 {
-    size_t step = 64 MB;
+    size_t step = 64 MiB;
     BYTE* testmem=NULL;
 
     requiredMem = (((requiredMem >> 26) + 1) << 26);
@@ -602,7 +602,7 @@ int fullSpeedBench(char** fileNamesTable, int nbFiles)
       if (benchedSize==0) { DISPLAY( "not enough memory\n"); fclose(inFile); return 11; }
       if ((U64)benchedSize > inFileSize) benchedSize = (size_t)inFileSize;
       if (benchedSize < inFileSize)
-          DISPLAY("Not enough memory for '%s' full size; testing %i MB only...\n", inFileName, (int)(benchedSize>>20));
+          DISPLAY("Not enough memory for '%s' full size; testing %i MiB only...\n", inFileName, (int)(benchedSize>>20));
 
       /* Allocation */
       chunkP = (struct chunkParameters*) malloc(((benchedSize / (size_t)g_chunkSize)+1) * sizeof(struct chunkParameters));
@@ -744,13 +744,13 @@ int fullSpeedBench(char** fileNamesTable, int nbFiles)
                 if (averageTime < bestTime) bestTime = averageTime;
                 cSize=0; for (chunkNb=0; chunkNb<nbChunks; chunkNb++) cSize += chunkP[chunkNb].compressedSize;
                 ratio = (double)cSize/(double)benchedSize*100.;
-                PROGRESS("%1i- %-28.28s :%9i ->%9i (%5.2f%%),%7.1f MB/s\r", loopNb, compressorName, (int)benchedSize, (int)cSize, ratio, (double)benchedSize / bestTime / 1000.);
+                PROGRESS("%1i- %-28.28s :%9i ->%9i (%5.2f%%),%7.1f MiB/s\r", loopNb, compressorName, (int)benchedSize, (int)cSize, ratio, (double)benchedSize / bestTime / 1000.);
             }
 
             if (ratio<100.)
-                DISPLAY("%2i-%-28.28s :%9i ->%9i (%5.2f%%),%7.1f MB/s\n", cAlgNb, compressorName, (int)benchedSize, (int)cSize, ratio, (double)benchedSize / bestTime / 1000.);
+                DISPLAY("%2i-%-28.28s :%9i ->%9i (%5.2f%%),%7.1f MiB/s\n", cAlgNb, compressorName, (int)benchedSize, (int)cSize, ratio, (double)benchedSize / bestTime / 1000.);
             else
-                DISPLAY("%2i-%-28.28s :%9i ->%9i (%5.1f%%),%7.1f MB/s\n", cAlgNb, compressorName, (int)benchedSize, (int)cSize, ratio, (double)benchedSize / bestTime / 1000.);
+                DISPLAY("%2i-%-28.28s :%9i ->%9i (%5.1f%%),%7.1f MiB/s\n", cAlgNb, compressorName, (int)benchedSize, (int)cSize, ratio, (double)benchedSize / bestTime / 1000.);
         }
 
         /* Prepare layout for decompression */
@@ -842,14 +842,14 @@ int fullSpeedBench(char** fileNamesTable, int nbFiles)
                 averageTime = (double)milliTime / nb_loops;
                 if (averageTime < bestTime) bestTime = averageTime;
 
-                PROGRESS("%1i- %-29.29s :%10i -> %7.1f MB/s\r", loopNb, dName, (int)benchedSize, (double)benchedSize / bestTime / 1000.);
+                PROGRESS("%1i- %-29.29s :%10i -> %7.1f MiB/s\r", loopNb, dName, (int)benchedSize, (double)benchedSize / bestTime / 1000.);
 
                 /* CRC Checking */
                 crcDecoded = XXH32(orig_buff, (int)benchedSize, 0);
                 if (crcOriginal!=crcDecoded) { DISPLAY("\n!!! WARNING !!! %14s : Invalid Checksum : %x != %x\n", inFileName, (unsigned)crcOriginal, (unsigned)crcDecoded); exit(1); }
             }
 
-            DISPLAY("%2i-%-29.29s :%10i -> %7.1f MB/s\n", dAlgNb, dName, (int)benchedSize, (double)benchedSize / bestTime / 1000.);
+            DISPLAY("%2i-%-29.29s :%10i -> %7.1f MiB/s\n", dAlgNb, dName, (int)benchedSize, (double)benchedSize / bestTime / 1000.);
         }
       }
       free(orig_buff);

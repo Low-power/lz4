@@ -32,7 +32,7 @@
 #  define BMK_LEGACY_TIMER 1           /* S_ISREG & gettimeofday() are not supported by MSVC */
 #endif
 
-/* Unix Large Files support (>4GB) */
+/* Unix Large Files support (>4GiB) */
 #define _FILE_OFFSET_BITS 64
 #if (defined(__sun__) && (!defined(__LP64__)))   /* Sun Solaris 32-bits requires specific definitions */
 #  define _LARGEFILE_SOURCE
@@ -99,12 +99,12 @@ static int LZ4_compress_local(const char* src, char* dst, int srcSize, int dstSi
 #define NBLOOPS    3
 #define TIMELOOP   2000
 
-#define KB *(1 <<10)
-#define MB *(1 <<20)
-#define GB *(1U<<30)
+#define KiB *(1 <<10)
+#define MiB *(1 <<20)
+#define GiB *(1U<<30)
 
-#define MAX_MEM             (2 GB - 64 MB)
-#define DEFAULT_CHUNKSIZE   (4 MB)
+#define MAX_MEM             (2 GiB - 64 MiB)
+#define DEFAULT_CHUNKSIZE   (4 MiB)
 
 
 /**************************************
@@ -195,7 +195,7 @@ static int BMK_GetMilliSpan( int nTimeStart )
 
 static size_t BMK_findMaxMem(U64 requiredMem)
 {
-    size_t step = 64 MB;
+    size_t step = 64 MiB;
     BYTE* testmem=NULL;
 
     requiredMem = (((requiredMem >> 26) + 1) << 26);
@@ -291,7 +291,7 @@ int BMK_benchFiles(const char** fileNamesTable, int nbFiles, int cLevel)
       if ((U64)benchedSize > inFileSize) benchedSize = (size_t)inFileSize;
       if (benchedSize < inFileSize)
       {
-          DISPLAY("Not enough memory for '%s' full size; testing %i MB only...\n", inFileName, (int)(benchedSize>>20));
+          DISPLAY("Not enough memory for '%s' full size; testing %i MiB only...\n", inFileName, (int)(benchedSize>>20));
       }
 
       /* Alloc */
@@ -381,7 +381,7 @@ int BMK_benchFiles(const char** fileNamesTable, int nbFiles, int cLevel)
           cSize=0; for (chunkNb=0; chunkNb<nbChunks; chunkNb++) cSize += chunkP[chunkNb].compressedSize;
           ratio = (double)cSize/(double)benchedSize*100.;
 
-          DISPLAY("%1i-%-14.14s : %9i -> %9i (%5.2f%%),%7.1f MB/s\r", loopNb, inFileName, (int)benchedSize, (int)cSize, ratio, (double)benchedSize / fastestC / 1000.);
+          DISPLAY("%1i-%-14.14s : %9i -> %9i (%5.2f%%),%7.1f MiB/s\r", loopNb, inFileName, (int)benchedSize, (int)cSize, ratio, (double)benchedSize / fastestC / 1000.);
 
           /* Decompression */
           { size_t i; for (i=0; i<benchedSize; i++) orig_buff[i]=0; }     /* zeroing area, for CRC checking */
@@ -400,7 +400,7 @@ int BMK_benchFiles(const char** fileNamesTable, int nbFiles, int cLevel)
 
           nbLoops += !nbLoops;   /* avoid division by zero */
           if ((double)milliTime < fastestD*nbLoops) fastestD = (double)milliTime/nbLoops;
-          DISPLAY("%1i-%-14.14s : %9i -> %9i (%5.2f%%),%7.1f MB/s ,%7.1f MB/s \r", loopNb, inFileName, (int)benchedSize, (int)cSize, ratio, (double)benchedSize / fastestC / 1000., (double)benchedSize / fastestD / 1000.);
+          DISPLAY("%1i-%-14.14s : %9i -> %9i (%5.2f%%),%7.1f MiB/s ,%7.1f MiB/s \r", loopNb, inFileName, (int)benchedSize, (int)cSize, ratio, (double)benchedSize / fastestC / 1000., (double)benchedSize / fastestD / 1000.);
 
           /* CRC Checking */
           crcCheck = XXH32(orig_buff, (unsigned int)benchedSize,0);
@@ -410,9 +410,9 @@ int BMK_benchFiles(const char** fileNamesTable, int nbFiles, int cLevel)
         if (crcOrig==crcCheck)
         {
             if (ratio<100.)
-                DISPLAY("%-16.16s : %9i -> %9i (%5.2f%%),%7.1f MB/s ,%7.1f MB/s \n", inFileName, (int)benchedSize, (int)cSize, ratio, (double)benchedSize / fastestC / 1000., (double)benchedSize / fastestD / 1000.);
+                DISPLAY("%-16.16s : %9i -> %9i (%5.2f%%),%7.1f MiB/s ,%7.1f MiB/s \n", inFileName, (int)benchedSize, (int)cSize, ratio, (double)benchedSize / fastestC / 1000., (double)benchedSize / fastestD / 1000.);
             else
-                DISPLAY("%-16.16s : %9i -> %9i (%5.1f%%),%7.1f MB/s ,%7.1f MB/s  \n", inFileName, (int)benchedSize, (int)cSize, ratio, (double)benchedSize / fastestC / 1000., (double)benchedSize / fastestD / 1000.);
+                DISPLAY("%-16.16s : %9i -> %9i (%5.1f%%),%7.1f MiB/s ,%7.1f MiB/s  \n", inFileName, (int)benchedSize, (int)cSize, ratio, (double)benchedSize / fastestC / 1000., (double)benchedSize / fastestD / 1000.);
         }
         totals += benchedSize;
         totalz += cSize;
@@ -426,7 +426,7 @@ int BMK_benchFiles(const char** fileNamesTable, int nbFiles, int cLevel)
   }
 
   if (nbFiles > 1)
-        DISPLAY("%-16.16s :%10llu ->%10llu (%5.2f%%), %6.1f MB/s , %6.1f MB/s\n", "  TOTAL", (long long unsigned int)totals, (long long unsigned int)totalz, (double)totalz/(double)totals*100., (double)totals/totalc/1000., (double)totals/totald/1000.);
+        DISPLAY("%-16.16s :%10llu ->%10llu (%5.2f%%), %6.1f MiB/s , %6.1f MiB/s\n", "  TOTAL", (long long unsigned int)totals, (long long unsigned int)totalz, (double)totalz/(double)totals*100., (double)totals/totalc/1000., (double)totals/totald/1000.);
 
   if (BMK_pause) { DISPLAY("\npress enter...\n"); (void)getchar(); }
 

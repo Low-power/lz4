@@ -93,12 +93,12 @@ static void FUZ_writeLE32 (void* dstVoidPtr, U32 value32)
 
 #define LZ4F_MAGIC_SKIPPABLE_START 0x184D2A50U
 
-#define KB *(1U<<10)
-#define MB *(1U<<20)
-#define GB *(1U<<30)
+#define KiB *(1U<<10)
+#define MiB *(1U<<20)
+#define GiB *(1U<<30)
 
-static const U32 nbTestsDefault = 256 KB;
-#define COMPRESSIBLE_NOISE_LENGTH (2 MB)
+static const U32 nbTestsDefault = 256 KiB;
+#define COMPRESSIBLE_NOISE_LENGTH (2 MiB)
 #define FUZ_COMPRESSIBILITY_DEFAULT 50
 static const U32 prime1 = 2654435761U;
 static const U32 prime2 = 2246822519U;
@@ -342,7 +342,7 @@ int basicTests(U32 seed, double compressibility)
         if (LZ4F_isError(errorCode)) goto _output_error;
     }
 
-    DISPLAYLEVEL(3, "Using 64 KB block : \n");
+    DISPLAYLEVEL(3, "Using 64 KiB block : \n");
     prefs.frameInfo.blockSizeID = LZ4F_max64KB;
     prefs.frameInfo.contentChecksumFlag = LZ4F_contentChecksumEnabled;
     cSize = LZ4F_compressFrame(compressedBuffer, LZ4F_compressFrameBound(testSize, &prefs), CNBuffer, testSize, &prefs);
@@ -355,7 +355,7 @@ int basicTests(U32 seed, double compressibility)
     if (LZ4F_isError(cSize)) goto _output_error;
     DISPLAYLEVEL(3, "Compressed %i bytes into a %i bytes frame \n", (int)testSize, (int)cSize);
 
-    DISPLAYLEVEL(3, "Using 256 KB block : \n");
+    DISPLAYLEVEL(3, "Using 256 KiB block : \n");
     prefs.frameInfo.blockSizeID = LZ4F_max256KB;
     prefs.frameInfo.contentChecksumFlag = LZ4F_contentChecksumEnabled;
     cSize = LZ4F_compressFrame(compressedBuffer, LZ4F_compressFrameBound(testSize, &prefs), CNBuffer, testSize, &prefs);
@@ -402,7 +402,7 @@ int basicTests(U32 seed, double compressibility)
     if (LZ4F_isError(cSize)) goto _output_error;
     DISPLAYLEVEL(3, "Compressed %i bytes into a %i bytes frame \n", (int)testSize, (int)cSize);
 
-    DISPLAYLEVEL(3, "Using 1 MB block : \n");
+    DISPLAYLEVEL(3, "Using 1 MiB block : \n");
     prefs.frameInfo.blockSizeID = LZ4F_max1MB;
     prefs.frameInfo.contentChecksumFlag = LZ4F_contentChecksumEnabled;
     cSize = LZ4F_compressFrame(compressedBuffer, LZ4F_compressFrameBound(testSize, &prefs), CNBuffer, testSize, &prefs);
@@ -415,7 +415,7 @@ int basicTests(U32 seed, double compressibility)
     if (LZ4F_isError(cSize)) goto _output_error;
     DISPLAYLEVEL(3, "Compressed %i bytes into a %i bytes frame \n", (int)testSize, (int)cSize);
 
-    DISPLAYLEVEL(3, "Using 4 MB block : \n");
+    DISPLAYLEVEL(3, "Using 4 MiB block : \n");
     prefs.frameInfo.blockSizeID = LZ4F_max4MB;
     prefs.frameInfo.contentChecksumFlag = LZ4F_contentChecksumEnabled;
     cSize = LZ4F_compressFrame(compressedBuffer, LZ4F_compressFrameBound(testSize, &prefs), CNBuffer, testSize, &prefs);
@@ -580,7 +580,7 @@ static void locateBuffDiff(const void* buff1, const void* buff2, size_t size, un
 }
 
 
-static const U32 srcDataLength = 9 MB;  /* needs to be > 2x4MB to test large blocks */
+static const U32 srcDataLength = 9 MiB;  /* needs to be > 2x4MB to test large blocks */
 
 int fuzzerTests(U32 seed, unsigned nbTests, unsigned startTest, double compressibility, U32 duration)
 {
