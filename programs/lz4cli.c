@@ -505,7 +505,10 @@ int main(int argc, char** argv)
     /* No output filename ==> try to select one automatically (when possible) */
     while (!output_filename)
     {
-        if (decode || !IS_CONSOLE(stdout)) { output_filename=stdoutmark; break; }   /* Default to stdout whenever possible (i.e. not a console) */
+        if (strcmp(input_filename, stdinmark) == 0 && (decode || !IS_CONSOLE(stdout))) {
+			output_filename=stdoutmark;
+			break;
+	}   /* Default to stdout whenever possible (i.e. not a console) */
         if ((!decode) && !(forceCompress))   /* auto-determine compression or decompression, based on file extension */
         {
             size_t l = strlen(input_filename);
