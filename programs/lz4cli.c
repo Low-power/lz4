@@ -182,7 +182,7 @@ static int usage_advanced(void)
     /* DISPLAY( " -B X   : enable block checksum (default:disabled)\n");   *//* Option currently inactive */
     DISPLAY( "--no-frame-crc : disable stream checksum (default:enabled)\n");
     DISPLAY( "--content-size : compressed frame includes original size (default:not present)\n");
-    DISPLAY( "--[no-]sparse  : sparse mode (default:enabled on file, disabled on stdout)\n");
+    DISPLAY( "--[no-]sparse  : sparse mode (default:enabled on named file, disabled on stdout)\n");
     DISPLAY( "Benchmark options :\n");
     DISPLAY( " -b     : benchmark file(s)\n");
     DISPLAY( " -i #   : iteration loops [1-9](default : 3), benchmark mode only\n");
@@ -321,9 +321,9 @@ int main(int argc, char** argv)
         if (!strcmp(argument, "--quiet")) { if (displayLevel) displayLevel--; continue; }
         if (!strcmp(argument, "--version")) { DISPLAY(WELCOME_MESSAGE); return 0; }
         if (!strcmp(argument, "--keep")) { continue; }   /* keep source file (default anyway; just for xz/lzma compatibility) */
-	/* --fast and --best for gzip(1) compatibility */
-        if (!strcmp(argument, "--fast")) { cLevel=1; continue; }
-        if (!strcmp(argument, "--best")) { cLevel=9; continue; }
+	/* --fast and --best aliases, for gzip(1) compatibility */
+        if (strcmp(argument, "--fast") == 0) { cLevel=1; continue; }
+        if (strcmp(argument, "--best") == 0) { cLevel=9; continue; }
 
         /* Short commands (note : aggregated short commands are allowed) */
         if (argument[0]=='-')
