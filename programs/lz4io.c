@@ -955,6 +955,43 @@ static unsigned long long selectDecoder(dRess_t ress, FILE* finput, FILE* foutpu
     }
 }
 
+static long int human_readable_binary(unsigned long long int n, int *unit, unsigned int scale) {
+	if(!unit) return -1;
+	if(scale < 1) return -1;
+	switch(*unit) {
+		case 0:
+			if(n < 1024 * scale) return n;
+			n /= 1024;
+			*unit = 'K';
+		case 'K':
+			if(n < 1024 * scale) return n;
+			n /= 1024;
+			*unit = 'M';
+		case 'M':
+			if(n < 1024 * scale) return n;
+			n /= 1024;
+			*unit = 'G';
+		case 'G':
+			if(n < 1024 * scale) return n;
+			n /= 1024;
+			*unit = 'T';
+		case 'T':
+			if(n < 1024 * scale) return n;
+			n /= 1024;
+			*unit = 'P';
+		case 'P':
+			if(n < 1024 * scale) return n;
+			n /= 1024;
+			*unit = 'E';
+		case 'E':
+			if(n < 1024 * scale) return n;
+			n /= 1024;
+			*unit = 'Z';
+			return n;
+		default:
+			return -1;
+	}
+}
 
 static int LZ4IO_decompressFile_extRess(dRess_t ress, const char* input_filename, const char* output_filename)
 {
@@ -980,7 +1017,13 @@ static int LZ4IO_decompressFile_extRess(dRess_t ress, const char* input_filename
 
     /* Final Status */
     DISPLAYLEVEL(2, "\r%79s\r", "");
-    DISPLAYLEVEL(2, "Successfully decoded %llu bytes \n", filesize);
+    DISPLAYLEVEL(2, "Successfully decoded %llu bytes", filesize);
+	if(filesize > 1024) {
+		int unit = 0;
+		filesize = human_readable_binary(filesize, &unit, 1);
+		if(unit) DISPLAYLEVEL(2, " (%llu %ciB)", filesize, unit);
+	}
+	DISPLAYLEVEL(2, "\n");
 
     /* Close */
     fclose(finput);
