@@ -66,20 +66,22 @@ all: liblz4
 
 liblz4: liblz4.a liblz4.$(SHARED_EXT)
 
-liblz4.a:	lz4.c lz4hc.c lz4frame.c xxhash.c
-	@echo compiling static library
-	$(CC) $(CPPFLAGS) $(CFLAGS) -c $^
-	$(AR) -rcs $@ lz4.o lz4hc.o lz4frame.o xxhash.o
+liblz4.a:	lz4.o lz4hc.o lz4frame.o xxhash.o
+	@echo "building static library"
+	$(AR) -rcs $@ $^
 
 liblz4.$(SHARED_EXT):	lz4.c lz4hc.c lz4frame.c xxhash.c
-	@echo compiling dynamic library $(LIBVER)
+	@echo "building dynamic library $(LIBVER)"
 	$(CC) $(CPPFLAGS) $(CFLAGS) -fPIC --shared $(LDFLAGS) $(SONAME_FLAGS) $^ -o liblz4.$(SHARED_EXT_VER)
 	@echo creating versioned links
 	ln -sf liblz4.$(SHARED_EXT_VER) liblz4.$(SHARED_EXT_MAJOR)
 	ln -sf liblz4.$(SHARED_EXT_VER) $@
 
+lz4.dll:	lz4.o lz4hc.o lz4frame.o xxhash.o
+	$(CC) $(LDFLAGS) --shared $^ -o $@
+
 clean:
-	@rm -f core *.o *.a *.$(SHARED_EXT) *.$(SHARED_EXT).* liblz4.pc
+	@rm -f core *.o *.a *.$(SHARED_EXT) *.$(SHARED_EXT).* lz4.dll liblz4.pc
 	@echo Cleaning library completed
 
 
