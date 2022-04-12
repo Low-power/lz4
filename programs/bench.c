@@ -27,9 +27,12 @@
 *  Compiler Options
 ***************************************/
 #if defined(_MSC_VER) || defined(_WIN32)
+# include <windows.h>
+# ifndef _WIN32_WCE
 #  define _CRT_SECURE_NO_WARNINGS
 #  define _CRT_SECURE_NO_DEPRECATE     /* VS2005 */
 #  define BMK_LEGACY_TIMER 1           /* S_ISREG & gettimeofday() are not supported by MSVC */
+# endif
 #endif
 
 /* Unix Large Files support (>4GiB) */

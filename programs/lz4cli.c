@@ -71,11 +71,17 @@
 #    include <unistd.h>
 #    define _isatty isatty
 #    define _fileno fileno
+#  elif defined _WIN32
+#   include <windows.h>	/* For _WIN32_WCE */
 #  endif
-#  ifdef __MINGW32__
+#  ifdef _WIN32_WCE
+#   define IS_CONSOLE(stdStream) isatty(fileno(stdStream))
+#  else
+#   if defined __MINGW32__ && !defined _fileno
    int _fileno(FILE *stream);   /* MINGW somehow forgets to include this prototype into <stdio.h> */
+#   endif
+#   define IS_CONSOLE(stdStream) _isatty(_fileno(stdStream))
 #  endif
-#  define IS_CONSOLE(stdStream) _isatty(_fileno(stdStream))
 #else
 #  include <unistd.h>   /* isatty */
 #  define IS_CONSOLE(stdStream) isatty(fileno(stdStream))
