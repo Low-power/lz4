@@ -56,6 +56,7 @@
 #include "lz4.h"       /* still required for legacy format */
 #include "lz4hc.h"     /* still required for legacy format */
 #include "lz4frame.h"
+#include <errno.h>
 
 
 /******************************
@@ -355,8 +356,8 @@ int LZ4IO_compressFilename_Legacy(const char* input_filename, const char* output
     char* in_buff;
     char* out_buff;
     const int outBuffSize = LZ4_compressBound(LEGACY_BLOCKSIZE);
-    FILE* finput;
-    FILE* foutput;
+    FILE *input_f;
+    FILE *output_f;
     clock_t start, end;
     size_t sizeCheck;
 
@@ -365,7 +366,7 @@ int LZ4IO_compressFilename_Legacy(const char* input_filename, const char* output
     start = clock();
     if (compressionlevel < 3) compressionFunction = LZ4IO_LZ4_compress; else compressionFunction = LZ4_compress_HC;
 
-    if (LZ4IO_getFiles(input_filename, output_filename, &finput, &foutput))
+    if (LZ4IO_getFiles(input_filename, output_filename, &input_f, &output_f))
         EXM_THROW(20, "File error");
 
     /* Allocate Memory */
@@ -375,7 +376,7 @@ int LZ4IO_compressFilename_Legacy(const char* input_filename, const char* output
 
     /* Write Archive Header */
     LZ4IO_writeLE32(out_buff, LEGACY_MAGICNUMBER);
-    sizeCheck = fwrite(out_buff, 1, MAGICNUMBER_SIZE, foutput);
+    sizeCheck = fwrite(out_buff, 1, MAGICNUMBER_SIZE, output_f);
     if (sizeCheck!=MAGICNUMBER_SIZE) EXM_THROW(22, "Write error : cannot write header");
 
     /* Main Loop */
@@ -383,8 +384,15 @@ int LZ4IO_compressFilename_Legacy(const char* input_filename, const char* output
     {
         unsigned int outSize;
         /* Read Block */
-        int inSize = (int) fread(in_buff, (size_t)1, (size_t)LEGACY_BLOCKSIZE, finput);
-        if( inSize<=0 ) break;
+        int inSize = (int) fread(in_buff, (size_t)1, (size_t)LEGACY_BLOCKSIZE, input_f);
+        if( inSize<=0 ) {
+			if(ferror(input_f)) {
+				int e = errno;
+				DISPLAYLEVEL(1, "Read error : %s: %s\n", input_filename, strerror(e));
+				clearerr(input_f);
+			}
+			break;
+        }
         filesize += inSize;
 
         /* Compress Block */
@@ -394,7 +402,7 @@ int LZ4IO_compressFilename_Legacy(const char* input_filename, const char* output
 
         /* Write Block */
         LZ4IO_writeLE32(out_buff, outSize);
-        sizeCheck = fwrite(out_buff, 1, outSize+4, foutput);
+        sizeCheck = fwrite(out_buff, 1, outSize+4, output_f);
         if (sizeCheck!=(size_t)(outSize+4)) EXM_THROW(23, "Write error : cannot write compressed block");
     }
 
@@ -412,8 +420,8 @@ int LZ4IO_compressFilename_Legacy(const char* input_filename, const char* output
     /* Close & Free */
     free(in_buff);
     free(out_buff);
-    fclose(finput);
-    fclose(foutput);
+    fclose(input_f);
+    fclose(output_f);
 
     return 0;
 }
@@ -501,6 +509,12 @@ static int LZ4IO_compressFilename_extRess(cRess_t ress, const char* srcFileName,
 
     /* read first block */
     readSize  = fread(srcBuffer, (size_t)1, blockSize, srcFile);
+    if(ferror(srcFile)) {
+		int e = errno;
+		//DISPLAYLEVEL(1, "Error reading input file %s: %s\n", srcFileName, strerror(e));
+		DISPLAYLEVEL(1, "Read error : %s: %s\n", srcFileName, strerror(e));
+		clearerr(srcFile);
+    }
     filesize += readSize;
 
     /* single-block file */
@@ -548,6 +562,12 @@ static int LZ4IO_compressFilename_extRess(cRess_t ress, const char* srcFileName,
             readSize  = fread(srcBuffer, (size_t)1, (size_t)blockSize, srcFile);
             filesize += readSize;
         }
+
+        if(ferror(srcFile)) {
+			int e = errno;
+			DISPLAYLEVEL(1, "Read error : %s: %s\n", srcFileName, strerror(e));
+			clearerr(srcFile);
+	}
 
         /* End of Stream mark */
         headerSize = LZ4F_compressEnd(ctx, dstBuffer, dstBufferSize, NULL);
@@ -849,8 +869,13 @@ static unsigned long long LZ4IO_decompressLZ4F(dRess_t ress, FILE* srcFile, FILE
         /* Read input */
         if (nextToLoad > ress.srcBufferSize) nextToLoad = ress.srcBufferSize;
         readSize = fread(ress.srcBuffer, 1, nextToLoad, srcFile);
-        if (!readSize)
+        if (!readSize) {
+            if(ferror(srcFile)) {
+			DISPLAYLEVEL(1, "Read error : %s\n", strerror(errno));
+			clearerr(srcFile);
+            }
             break;   /* empty file or stream */
+        }
 
         while ((pos < readSize) || (decodedBytes == ress.dstBufferSize))   /* still to read, or still to flush */
         {
@@ -884,30 +909,34 @@ static unsigned long long LZ4IO_decompressLZ4F(dRess_t ress, FILE* srcFile, FILE
 
 #define PTSIZE  (64 KiB)
 #define PTSIZET (PTSIZE / sizeof(size_t))
-static unsigned long long LZ4IO_passThrough(FILE* finput, FILE* foutput, unsigned char MNstore[MAGICNUMBER_SIZE])
+static unsigned long long LZ4IO_passThrough(FILE *input_f, FILE *output_f, unsigned char MNstore[MAGICNUMBER_SIZE])
 {
 	size_t buffer[PTSIZET];
     size_t read = 1, sizeCheck;
     unsigned long long total = MAGICNUMBER_SIZE;
     unsigned storedSkips = 0;
 
-    sizeCheck = fwrite(MNstore, 1, MAGICNUMBER_SIZE, foutput);
+    sizeCheck = fwrite(MNstore, 1, MAGICNUMBER_SIZE, output_f);
     if (sizeCheck != MAGICNUMBER_SIZE) EXM_THROW(50, "Pass-through write error");
 
     while (read)
     {
-        read = fread(buffer, 1, PTSIZE, finput);
+        read = fread(buffer, 1, PTSIZE, input_f);
         total += read;
-        storedSkips = LZ4IO_fwriteSparse(foutput, buffer, read, storedSkips);
+        storedSkips = LZ4IO_fwriteSparse(output_f, buffer, read, storedSkips);
+    }
+    if(ferror(input_f)) {
+		DISPLAYLEVEL(1, "Read error : %s\n", strerror(errno));
+		clearerr(input_f);
     }
 
-    LZ4IO_fwriteSparseEnd(foutput, storedSkips);
+    LZ4IO_fwriteSparseEnd(output_f, storedSkips);
     return total;
 }
 
 
 #define ENDOFSTREAM ((unsigned long long)-1)
-static unsigned long long selectDecoder(dRess_t ress, FILE* finput, FILE* foutput)
+static unsigned long long selectDecoder(dRess_t ress, FILE *input_f, FILE *output_f)
 {
     unsigned char MNstore[MAGICNUMBER_SIZE];
     unsigned magicNumber, size;
@@ -926,8 +955,14 @@ static unsigned long long selectDecoder(dRess_t ress, FILE* finput, FILE* foutpu
     }
     else
     {
-      nbReadBytes = fread(MNstore, 1, MAGICNUMBER_SIZE, finput);
-      if (nbReadBytes==0) return ENDOFSTREAM;                  /* EOF */
+      nbReadBytes = fread(MNstore, 1, MAGICNUMBER_SIZE, input_f);
+      if (nbReadBytes==0) {
+			if(ferror(input_f)) {
+				DISPLAYLEVEL(1, "Read error : %s\n", strerror(errno));
+				clearerr(input_f);
+			}
+			return ENDOFSTREAM;
+      }
       if (nbReadBytes != MAGICNUMBER_SIZE) EXM_THROW(40, "Unrecognized header : Magic Number unreadable");
       magicNumber = LZ4IO_readLE32(MNstore);   /* Little Endian format */
     }
@@ -936,24 +971,24 @@ static unsigned long long selectDecoder(dRess_t ress, FILE* finput, FILE* foutpu
     switch(magicNumber)
     {
     case LZ4IO_MAGICNUMBER:
-        return LZ4IO_decompressLZ4F(ress, finput, foutput);
+        return LZ4IO_decompressLZ4F(ress, input_f, output_f);
     case LEGACY_MAGICNUMBER:
         DISPLAYLEVEL(4, "Detected : Legacy format \n");
-        return LZ4IO_decodeLegacyStream(finput, foutput);
+        return LZ4IO_decodeLegacyStream(input_f, output_f);
     case LZ4IO_SKIPPABLE0:
         DISPLAYLEVEL(4, "Skipping detected skippable area \n");
-        nbReadBytes = fread(MNstore, 1, 4, finput);
+        nbReadBytes = fread(MNstore, 1, 4, input_f);
         if (nbReadBytes != 4) EXM_THROW(42, "Stream error : skippable size unreadable");
         size = LZ4IO_readLE32(MNstore);     /* Little Endian format */
-        errorNb = fseek(finput, size, SEEK_CUR);
+        errorNb = fseek(input_f, size, SEEK_CUR);
         if (errorNb != 0) EXM_THROW(43, "Stream error : cannot skip skippable area");
-        return selectDecoder(ress, finput, foutput);
+        return selectDecoder(ress, input_f, output_f);
     EXTENDED_FORMAT;
     default:
         if (nbCalls == 1)   /* just started */
         {
             if (g_overwrite)
-                return LZ4IO_passThrough(finput, foutput, MNstore);
+                return LZ4IO_passThrough(input_f, output_f, MNstore);
             EXM_THROW(44,"Unrecognized header : file cannot be decoded");   /* Wrong magic number at the beginning of 1st stream */
         }
         DISPLAYLEVEL(2, "Stream followed by unrecognized data\n");
