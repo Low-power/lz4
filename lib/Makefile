@@ -52,11 +52,13 @@ ifeq ($(shell uname), Darwin)
 	SHARED_EXT := dylib
 	SHARED_EXT_MAJOR := $(LIBVER_MAJOR).$(SHARED_EXT)
 	SHARED_EXT_VER := $(LIBVER).$(SHARED_EXT)
+	SHARED_OPTION := -dynamiclib
 	SONAME_FLAGS := -install_name liblz4.$(SHARED_EXT_MAJOR) -compatibility_version $(LIBVER_MAJOR) -current_version $(LIBVER)
 else
 	SHARED_EXT := so
 	SHARED_EXT_MAJOR := $(SHARED_EXT).$(LIBVER_MAJOR)
 	SHARED_EXT_VER := $(SHARED_EXT).$(LIBVER)
+	SHARED_OPTION := --shared
 	SONAME_FLAGS := -Wl,--soname,liblz4.$(SHARED_EXT).$(LIBVER_MAJOR)
 endif
 
@@ -72,7 +74,7 @@ liblz4.a:	lz4.o lz4hc.o lz4frame.o xxhash.o
 
 liblz4.$(SHARED_EXT):	lz4.c lz4hc.c lz4frame.c xxhash.c
 	@echo "building dynamic library $(LIBVER)"
-	$(CC) $(CPPFLAGS) $(CFLAGS) -fPIC --shared $(LDFLAGS) $(SONAME_FLAGS) $^ -o liblz4.$(SHARED_EXT_VER)
+	$(CC) $(CPPFLAGS) $(CFLAGS) -fPIC $(SHARED_OPTION) $(LDFLAGS) $(SONAME_FLAGS) $^ -o liblz4.$(SHARED_EXT_VER)
 	@echo creating versioned links
 	ln -sf liblz4.$(SHARED_EXT_VER) liblz4.$(SHARED_EXT_MAJOR)
 	ln -sf liblz4.$(SHARED_EXT_VER) $@
