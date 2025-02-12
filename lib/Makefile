@@ -102,9 +102,9 @@ liblz4.pc: liblz4.pc.in Makefile
 install: liblz4 liblz4.pc
 	@install -d -m 755 $(DESTDIR)$(LIBDIR)/pkgconfig/ $(DESTDIR)$(INCLUDEDIR)/
 	@install -m 755 liblz4.$(SHARED_EXT_VER) $(DESTDIR)$(LIBDIR)/liblz4.$(SHARED_EXT_VER)
-	@cp -a liblz4.$(SHARED_EXT_MAJOR) $(DESTDIR)$(LIBDIR)
-	@cp -a liblz4.$(SHARED_EXT) $(DESTDIR)$(LIBDIR)
-	@cp -a liblz4.pc $(DESTDIR)$(LIBDIR)/pkgconfig/
+	@cp -RPp liblz4.$(SHARED_EXT_MAJOR) $(DESTDIR)$(LIBDIR)/
+	@cp -RPp liblz4.$(SHARED_EXT) $(DESTDIR)$(LIBDIR)/
+	@cp -RPp liblz4.pc $(DESTDIR)$(LIBDIR)/pkgconfig/
 	@install -m 644 liblz4.a $(DESTDIR)$(LIBDIR)/liblz4.a
 	@install -m 644 lz4.h $(DESTDIR)$(INCLUDEDIR)/lz4.h
 	@install -m 644 lz4hc.h $(DESTDIR)$(INCLUDEDIR)/lz4hc.h
